@@ -1,0 +1,14 @@
+# Render.com blueprint — one-click deploy of the single Node service that
+# serves both the React build and the /api endpoints (incl. SSE).
+services:
+  - type: web
+    name: glean-enterprise-intelligence
+    runtime: node
+    plan: free
+    buildCommand: npm run install:all && npm run build
+    startCommand: node backend/server.js
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Optional: set ANTHROPIC_API_KEY in the Render dashboard to enable the
+      # live-Claude Assistant. Left unset, the Assistant uses grounded canned replies.
