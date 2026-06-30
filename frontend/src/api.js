@@ -1,5 +1,11 @@
 // Thin client for the Glean Enterprise Intelligence backend.
 // All paths are proxied to http://localhost:8787 via vite.config.js.
+//
+// When built with VITE_STATIC=1 (e.g. GitHub Pages) there is no server: every
+// call routes to a client-side mock that mirrors the backend exactly.
+import { api as mockApi, runAgent as mockRunAgent } from './mock/index.js'
+
+const STATIC = import.meta.env.VITE_STATIC === '1'
 
 const BASE = '/api'
 
@@ -25,7 +31,7 @@ function post(path, body) {
   })
 }
 
-export const api = {
+const liveApi = {
   personas: () => json('/personas'),
   sources: () => json('/sources'),
   pulse: (persona) => json(`/pulse/${persona}`),
@@ -39,8 +45,11 @@ export const api = {
   assistant: (message, persona) => post('/assistant', { message, persona }),
 }
 
+export const api = STATIC ? mockApi : liveApi
+
 // Open the SSE stream for an insight's agent run.
-// Returns the EventSource; caller wires start/step/done handlers and closes on done.
+// Returns the EventSource (or a fake one in static mode); caller wires
+// start/step/done handlers and closes on done.
 export function runAgent(id) {
-  return new EventSource(`${BASE}/agent/${id}/run`)
+  return STATIC ? mockRunAgent(id) : new EventSource(`${BASE}/agent/${id}/run`)
 }
